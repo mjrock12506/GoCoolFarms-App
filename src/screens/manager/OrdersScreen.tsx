@@ -35,6 +35,19 @@ const PAID_STATUSES = ['paid','cash_confirmed','zelle_confirmed','card_confirmed
 
 export default function OrdersScreen() {
   const navigation              = useNavigation<any>()
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => navigation.navigate('AddOrder')}
+          style={{ marginRight: 16 }}
+        >
+          <Text style={{ fontSize: 28, color: '#fff', fontWeight: '300' }}>+</Text>
+        </TouchableOpacity>
+      ),
+    })
+  }, [navigation])
   const route                   = useRoute<any>()
 
   const [orders,     setOrders]     = useState<Order[]>([])

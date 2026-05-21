@@ -5,13 +5,15 @@ import { Text } from 'react-native'
 import DashboardScreen     from '../screens/manager/DashboardScreen'
 import OrdersScreen        from '../screens/manager/OrdersScreen'
 import OrderDetailScreen   from '../screens/manager/OrderDetailScreen'
+import AddOrderScreen      from '../screens/manager/AddOrderScreen'
 import ProductsScreen      from '../screens/manager/ProductsScreen'
 import RoutesPlannerScreen from '../screens/manager/RoutesPlannerScreen'
+import ReportsScreen       from '../screens/manager/ReportsScreen'
 
 const Tab   = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
 
-const screenOptions = {
+const hStyle = {
   headerStyle:      { backgroundColor: '#8B5CF6' },
   headerTintColor:  '#fff',
   headerTitleStyle: { fontWeight: '700' },
@@ -19,7 +21,7 @@ const screenOptions = {
 
 function DashboardStack() {
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator screenOptions={hStyle}>
       <Stack.Screen
         name="DashboardHome"
         component={DashboardScreen}
@@ -36,7 +38,7 @@ function DashboardStack() {
 
 function OrdersStack() {
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator screenOptions={hStyle}>
       <Stack.Screen
         name="OrdersList"
         component={OrdersScreen}
@@ -46,6 +48,11 @@ function OrdersStack() {
         name="OrderDetail"
         component={OrderDetailScreen}
         options={{ title: 'Order Detail' }}
+      />
+      <Stack.Screen
+        name="AddOrder"
+        component={AddOrderScreen}
+        options={{ title: 'New Order' }}
       />
     </Stack.Navigator>
   )
@@ -89,9 +96,7 @@ export default function ManagerNavigator() {
         options={{
           tabBarIcon: () => <Text style={{ fontSize: 20 }}>📦</Text>,
           headerTitle: 'Products',
-          headerStyle:      { backgroundColor: '#8B5CF6' },
-          headerTintColor:  '#fff',
-          headerTitleStyle: { fontWeight: '700' },
+          ...hStyle,
         }}
       />
       <Tab.Screen
@@ -100,9 +105,16 @@ export default function ManagerNavigator() {
         options={{
           tabBarIcon: () => <Text style={{ fontSize: 20 }}>🗺</Text>,
           headerTitle: 'Route Planner',
-          headerStyle:      { backgroundColor: '#8B5CF6' },
-          headerTintColor:  '#fff',
-          headerTitleStyle: { fontWeight: '700' },
+          ...hStyle,
+        }}
+      />
+      <Tab.Screen
+        name="Reports"
+        component={ReportsScreen}
+        options={{
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📊</Text>,
+          headerTitle: 'Reports',
+          ...hStyle,
         }}
       />
     </Tab.Navigator>

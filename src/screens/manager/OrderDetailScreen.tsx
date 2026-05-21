@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import { useAuth } from '../../hooks/useAuth'
 import DateTimePicker from '@react-native-community/datetimepicker'
+import AddOrderScreen from '../screens/manager/AddOrderScreen'
 
 const STATUS_COLOR: Record<string, string> = {
   pending:          '#F4A261',
