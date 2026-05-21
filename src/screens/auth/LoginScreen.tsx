@@ -5,6 +5,10 @@ import {
   Platform, Alert
 } from 'react-native'
 import { supabase } from '../../lib/supabase'
+import { SvgUri } from 'react-native-svg'
+import Logo from '../../../assets/logo.svg'
+import { Image } from 'react-native'
+
 
 export default function LoginScreen() {
   const [email,    setEmail]    = useState('')
@@ -38,11 +42,11 @@ export default function LoginScreen() {
     >
       {/* Logo area */}
       <View style={styles.logoArea}>
-        <View style={styles.logoCircle}>
-          <Text style={styles.logoText}>🌿</Text>
-        </View>
-        <Text style={styles.appName}>GoCoolFarms</Text>
-        <Text style={styles.tagline}>Delivery & Logistics</Text>
+        <Image
+          source={require('../../../assets/logo.png')}
+          style={{ width: 200, height: 100 }}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Form */}
