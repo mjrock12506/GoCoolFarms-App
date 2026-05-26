@@ -8,45 +8,58 @@ import { supabase } from '../../lib/supabase'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import { useAuth } from '../../hooks/useAuth'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import AddOrderScreen from '../screens/manager/AddOrderScreen'
 
 const STATUS_COLOR: Record<string, string> = {
-  pending:          '#F4A261',
-  confirmed:        '#52B788',
-  assigned:         '#0EA5E9',
+  pending: '#F4A261',
+  confirmed: '#52B788',
+  assigned: '#0EA5E9',
   out_for_delivery: '#8B5CF6',
-  delivered:        '#2D6A4F',
-  cancelled:        '#EF4444',
+  delivered: '#2D6A4F',
+  cancelled: '#EF4444',
 }
 
 const PAYMENT_STATUSES = [
-  { key: 'unpaid',          label: '❌  Unpaid' },
-  { key: 'zelle_pending',   label: '⏳  Zelle Pending' },
+  { key: 'unpaid', label: '❌  Unpaid' },
+  { key: 'zelle_pending', label: '⏳  Zelle Pending' },
   { key: 'zelle_confirmed', label: '✅  Zelle Confirmed' },
-  { key: 'cash_pending',    label: '⏳  Cash Pending' },
-  { key: 'cash_confirmed',  label: '✅  Cash Confirmed' },
-  { key: 'card_pending',    label: '⏳  Card Pending' },
-  { key: 'card_confirmed',  label: '✅  Card Confirmed' },
-  { key: 'paid',            label: '✅  Paid' },
+  { key: 'cash_pending', label: '⏳  Cash Pending' },
+  { key: 'cash_confirmed', label: '✅  Cash Confirmed' },
+  { key: 'card_pending', label: '⏳  Card Pending' },
+  { key: 'card_confirmed', label: '✅  Card Confirmed' },
+  { key: 'paid', label: '✅  Paid' },
 ]
 
 const ORDER_STATUSES = [
-  'pending','confirmed','assigned',
-  'out_for_delivery','delivered','cancelled'
+  'pending', 'confirmed', 'assigned',
+  'out_for_delivery', 'delivered', 'cancelled'
 ]
 
-export default function OrderDetailScreen() {
-  const { user }        = useAuth()
-  const route           = useRoute<any>()
-  const navigation      = useNavigation<any>()
-  const { orderId }     = route.params
+// ← ADDED: helper to format order date in EST
+function formatOrderedAt(isoString: string) {
+  if (!isoString) return null
+  return new Date(isoString).toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+}
 
-  const [order,    setOrder]    = useState<any>(null)
-  const [drivers,  setDrivers]  = useState<any[]>([])
-  const [notes,    setNotes]    = useState<any[]>([])
-  const [newNote,  setNewNote]  = useState('')
-  const [loading,  setLoading]  = useState(true)
-  const [saving,   setSaving]   = useState(false)
+export default function OrderDetailScreen() {
+  const { user } = useAuth()
+  const route = useRoute<any>()
+  const navigation = useNavigation<any>()
+  const { orderId } = route.params
+
+  const [order, setOrder] = useState<any>(null)
+  const [drivers, setDrivers] = useState<any[]>([])
+  const [notes, setNotes] = useState<any[]>([])
+  const [newNote, setNewNote] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [showDate, setShowDate] = useState(false)
 
   useEffect(() => { loadAll() }, [])
@@ -108,7 +121,7 @@ export default function OrderDetailScreen() {
   async function assignDriver(driverId: string) {
     setSaving(true)
     const deliveryDate = order.delivery_date ??
-      `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`
+      `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
 
     const { data: existing } = await supabase
       .from('deliveries')
@@ -136,7 +149,7 @@ export default function OrderDetailScreen() {
 
   async function updateDate(date: Date) {
     setShowDate(false)
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     setSaving(true)
     await supabase.from('orders')
       .update({ delivery_date: dateStr, date_adjusted_by: user?.id })
@@ -148,9 +161,9 @@ export default function OrderDetailScreen() {
   async function addNote() {
     if (!newNote.trim()) return
     await supabase.from('order_notes').insert({
-      order_id:  orderId,
+      order_id: orderId,
       author_id: user?.id,
-      note:      newNote.trim(),
+      note: newNote.trim(),
       note_type: 'internal',
     })
     setNewNote('')
@@ -216,6 +229,11 @@ export default function OrderDetailScreen() {
         <Text style={styles.bigName}>{order.customer?.full_name}</Text>
         <Text style={styles.detail}>📱  {order.customer?.phone}</Text>
         <Text style={styles.detail}>📍  {order.customer?.address}</Text>
+
+        {/* ← ADDED: show when the customer placed this order */}
+        <Text style={styles.orderedAt}>
+          Ordered: {order.ordered_at ? formatOrderedAt(order.ordered_at) : 'No date stored'}
+        </Text>
       </View>
 
       {/* Order Items */}
@@ -384,85 +402,89 @@ export default function OrderDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: '#F8FAFC' },
-  center:         { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  testBanner:     {
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  testBanner: {
     backgroundColor: '#FFF7ED', padding: 12,
     borderBottomWidth: 1, borderBottomColor: '#FED7AA',
     alignItems: 'center',
   },
   testBannerText: { fontSize: 12, fontWeight: '700', color: '#F97316' },
-  card:           {
+  card: {
     backgroundColor: '#fff', borderRadius: 12,
     margin: 16, marginBottom: 0, padding: 16, elevation: 2,
   },
-  cardTitle:      { fontSize: 13, fontWeight: '700', color: '#8B5CF6', marginBottom: 12 },
-  bigName:        { fontSize: 20, fontWeight: '800', color: '#0F172A' },
-  detail:         { fontSize: 13, color: '#64748B', marginTop: 4 },
-  subLabel:       { fontSize: 12, color: '#64748B', marginBottom: 8 },
-  itemRow:        {
+  cardTitle: { fontSize: 13, fontWeight: '700', color: '#8B5CF6', marginBottom: 12 },
+  bigName: { fontSize: 20, fontWeight: '800', color: '#0F172A' },
+  detail: { fontSize: 13, color: '#64748B', marginTop: 4 },
+  subLabel: { fontSize: 12, color: '#64748B', marginBottom: 8 },
+
+  // ← ADDED style
+  orderedAt: { fontSize: 12, color: '#94A3B8', marginTop: 6, fontStyle: 'italic' },
+
+  itemRow: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
   },
-  itemName:       { fontSize: 13, color: '#0F172A', flex: 1 },
-  itemQty:        { fontSize: 13, color: '#64748B', marginHorizontal: 8 },
-  itemPrice:      { fontSize: 13, fontWeight: '700', color: '#2D6A4F' },
-  totalRow:       {
+  itemName: { fontSize: 13, color: '#0F172A', flex: 1 },
+  itemQty: { fontSize: 13, color: '#64748B', marginHorizontal: 8 },
+  itemPrice: { fontSize: 13, fontWeight: '700', color: '#2D6A4F' },
+  totalRow: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingTop: 10, marginTop: 4,
   },
-  totalLabel:     { fontSize: 15, fontWeight: '700', color: '#0F172A' },
-  totalAmount:    { fontSize: 18, fontWeight: '800', color: '#2D6A4F' },
-  dateBtn:        {
+  totalLabel: { fontSize: 15, fontWeight: '700', color: '#0F172A' },
+  totalAmount: { fontSize: 18, fontWeight: '800', color: '#2D6A4F' },
+  dateBtn: {
     flexDirection: 'row', justifyContent: 'space-between',
     backgroundColor: '#F1F5F9', borderRadius: 10,
     padding: 12, alignItems: 'center',
   },
-  dateBtnText:    { fontSize: 15, fontWeight: '600', color: '#0F172A' },
-  editText:       { fontSize: 13, color: '#8B5CF6', fontWeight: '600' },
-  btnGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  statusBtn:      {
+  dateBtnText: { fontSize: 15, fontWeight: '600', color: '#0F172A' },
+  editText: { fontSize: 13, color: '#8B5CF6', fontWeight: '600' },
+  btnGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  statusBtn: {
     borderRadius: 8, paddingHorizontal: 12,
     paddingVertical: 8, marginBottom: 4,
   },
-  statusBtnText:  { fontSize: 11, fontWeight: '600' },
-  driverRow:      {
+  statusBtnText: { fontSize: 11, fontWeight: '600' },
+  driverRow: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', paddingVertical: 10,
     borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
   },
-  driverInfo:     { flex: 1 },
-  driverName:     { fontSize: 14, fontWeight: '700', color: '#0F172A' },
-  driverPhone:    { fontSize: 12, color: '#64748B', marginTop: 2 },
-  assignBtn:      {
+  driverInfo: { flex: 1 },
+  driverName: { fontSize: 14, fontWeight: '700', color: '#0F172A' },
+  driverPhone: { fontSize: 12, color: '#64748B', marginTop: 2 },
+  assignBtn: {
     backgroundColor: '#8B5CF6', borderRadius: 8,
     paddingHorizontal: 16, paddingVertical: 8,
   },
-  assignBtnText:  { fontSize: 13, fontWeight: '700', color: '#fff' },
-  noteInput:      { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  noteTextInput:  {
+  assignBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  noteInput: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  noteTextInput: {
     flex: 1, backgroundColor: '#F1F5F9', borderRadius: 10,
     padding: 10, fontSize: 13, color: '#0F172A', minHeight: 44,
   },
-  noteAddBtn:     {
+  noteAddBtn: {
     backgroundColor: '#8B5CF6', borderRadius: 10,
     paddingHorizontal: 16, justifyContent: 'center',
   },
   noteAddBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  noteRow:        {
+  noteRow: {
     backgroundColor: '#F8FAFC', borderRadius: 8,
     padding: 10, marginBottom: 8,
   },
-  noteHeader:     {
+  noteHeader: {
     flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4,
   },
-  noteAuthor:     { fontSize: 11, fontWeight: '700', color: '#8B5CF6' },
-  noteDate:       { fontSize: 11, color: '#94A3B8' },
-  noteText:       { fontSize: 13, color: '#0F172A' },
-  deleteBtn:      {
+  noteAuthor: { fontSize: 11, fontWeight: '700', color: '#8B5CF6' },
+  noteDate: { fontSize: 11, color: '#94A3B8' },
+  noteText: { fontSize: 13, color: '#0F172A' },
+  deleteBtn: {
     backgroundColor: '#FEF2F2', margin: 16, marginTop: 20,
     borderRadius: 12, paddingVertical: 14, alignItems: 'center',
     borderWidth: 1, borderColor: '#FECACA',
   },
-  deleteBtnText:  { fontSize: 14, fontWeight: '700', color: '#EF4444' },
+  deleteBtnText: { fontSize: 14, fontWeight: '700', color: '#EF4444' },
 })
